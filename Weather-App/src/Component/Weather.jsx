@@ -1,33 +1,43 @@
-// src/components/Weather.js
+import React, { useState, useEffect } from 'react';
+import Navbar from './Navbar';
 
-import React, { useState } from 'react';
-import Navbar from "./Navbar.jsx";
 const Weather = () => {
     const [weatherData, setWeatherData] = useState(null);
     const [city, setCity] = useState('');
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-    const apiKey ="61fffabc269f11c54dfd59ca9ffd3cb0";
+    const apiKey = '61fffabc269f11c54dfd59ca9ffd3cb0';
 
     const fetchWeatherData = async () => {
         try {
             setLoading(true);
+            setError(null);
+
             const response = await fetch(
                 `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`
             );
+
             if (response.ok) {
                 const data = await response.json();
-                console.log(data)
                 setWeatherData(data);
             } else {
+                setError('City not found');
                 setWeatherData(null);
             }
             setLoading(false);
         } catch (error) {
             console.error('Error fetching weather data:', error);
+            setError('An error occurred while fetching data');
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        if (city !== '') {
+            fetchWeatherData();
+        }
+    }, [city]);
 
     return (
         <div>
@@ -48,17 +58,36 @@ const Weather = () => {
                     Get Weather
                 </button>
                 {loading && <p>Loading...</p>}
-                {weatherData && (
+                {error && <p className="text-red-500">{error}</p>}
+                {weatherData && !error && (
                     <div className="mt-4">
                         <h2 className="text-xl font-semibold">
                             {weatherData.name}, {weatherData.sys.country}
                         </h2>
-                        <p className="mt-2 text-lg">
-                            Temperature: {weatherData.main.temp}°C
-                        </p>
-                        <p className="mt-2 text-lg">
-                            Weather: {weatherData.weather[0].description}
-                        </p>
+                        <table className="mt-2 table-auto">
+                            <tbody>
+                            <tr>
+                                <td className="font-semibold">Temperature:</td>
+                                <td>{weatherData.main.temp}°C</td>
+                            </tr>
+                            <tr>
+                                <td className="font-semibold">Weather:</td>
+                                <td>{weatherData.weather[0].description}</td>
+                            </tr>
+                            <tr>
+                                <td className="font-semibold">Humidity:</td>
+                                <td>{weatherData.main.humidity}%</td>
+                            </tr>
+                            <tr>
+                                <td className="font-semibold">Wind Speed:</td>
+                                <td>{weatherData.wind.speed} m/s</td>
+                            </tr>
+                            <tr>
+                                <td className="font-semibold">Cloudiness:</td>
+                                <td>{weatherData.clouds.all}%</td>
+                            </tr>
+                            </tbody>
+                        </table>
                     </div>
                 )}
             </div>
